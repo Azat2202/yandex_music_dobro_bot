@@ -80,16 +80,8 @@ def format_track_name(track: Track) -> str:
     return f"""{track.title} - {",".join(track.artists_name())}"""
 
 
-async def get_http_session() -> aiohttp.ClientSession:
-    global http_session
-    if http_session is None or http_session.closed:
-        http_session = aiohttp.ClientSession()
-    return http_session
-
-
 async def download_file(url: str) -> bytes:
-    session = await get_http_session()
-    async with session.get(url) as resp:
+    async with http_session.get(url) as resp:
         resp.raise_for_status()
         return await resp.read()
 
@@ -103,8 +95,7 @@ async def upload_track_to_cache(track) -> InlineQueryResultCachedAudio | None:
 
         download_url = info.get_direct_link()
 
-        session = await get_http_session()
-        async with session.get(download_url) as resp:
+        async with http_session.get(download_url) as resp:
             if resp.status != 200:
                 return None
             audio_data = await resp.read()
@@ -113,7 +104,7 @@ async def upload_track_to_cache(track) -> InlineQueryResultCachedAudio | None:
         if track.cover_uri:
             try:
                 cover_url = track.get_cover_url(size='200x200')
-                async with session.get(cover_url) as resp:
+                async with http_session.get(cover_url) as resp:
                     if resp.status == 200:
                         thumb_data = await resp.read()
             except Exception as e:
@@ -193,8 +184,7 @@ async def handle_search_query(query: InlineQuery, user_token: str, search_query:
 
 
 async def handle_current_track(query: InlineQuery, user_token: str):
-    session = await get_http_session()
-    track, download_url = await YmClient.get_current_track(user_token, session)
+    track, download_url = await YmClient.get_current_track(user_token, http_session)
 
     if track is None:
         await query.answer(
@@ -279,16 +269,14 @@ async def inline_handler(query: InlineQuery):
 
 
 async def main() -> None:
+    global http_session
+    http_session = aiohttp.ClientSession()
     print("Bot started")
 
     try:
         await dp.start_polling(bot)
     finally:
-        global http_session
-
-        if http_session and not http_session.closed:
-            await http_session.close()
-
+        await http_session.close()
         user_repository.close()
 
 
