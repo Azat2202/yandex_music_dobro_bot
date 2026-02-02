@@ -39,6 +39,7 @@ async def command_start_handler(message: Message) -> None:
         parse_mode="HTML"
     )
 
+
 @dp.message(Command("help"))
 async def command_help_handler(message: Message) -> None:
     await message.answer(
@@ -56,7 +57,8 @@ async def command_help_handler(message: Message) -> None:
 async def command_token_handler(message: Message) -> None:
     try:
         token = message.text.split()[1]
-        await message.answer("Спасибо! Теперь можешь пользоваться ботом! Чтобы отправить текущий трек напиши @ya_music_dobro_bot в поле сообщения в любом чате и дождись загрузки трека")
+        await message.answer(
+            "Спасибо! Теперь можешь пользоваться ботом! Чтобы отправить текущий трек напиши @ya_music_dobro_bot в поле сообщения в любом чате и дождись загрузки трека")
         await message.delete()
         user_id = message.from_user.id
         user_repository.insert(user_id, token)
@@ -241,7 +243,8 @@ async def inline_handler(query: InlineQuery):
 
     if user_data is None:
         await query.answer(
-            create_inline_query_with_text(query.id, "Ошибка!", "Вы еще не зарегестрированы в боте! Перейдите в ЛС"),
+            create_inline_query_with_text(query.id, "Ошибка!",
+                                          "Вы еще не зарегестрированы в боте! Для регистрации напишите в личные сообщения боту @ya_music_dobro_bot"),
             is_personal=True,
             cache_time=0
         )
